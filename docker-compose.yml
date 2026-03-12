@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: magic-sky-pg
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: magic_sky
+    ports:
+      - "5432:5432"
+    volumes:
+      - magic_sky_pg_data:/var/lib/postgresql/data
+
+volumes:
+  magic_sky_pg_data:

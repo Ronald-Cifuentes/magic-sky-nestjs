@@ -1,0 +1,313 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Address {
+  address1: String!
+  address2: String
+  city: String!
+  countryCode: String!
+  id: String!
+  phone: String
+  province: String
+  zip: String
+}
+
+type AdminLoginResponse {
+  accessToken: String!
+  expiresIn: Float!
+  refreshToken: String!
+  user: AuthUser!
+}
+
+type AdminProfile {
+  firstName: String!
+  id: String!
+  lastName: String!
+  role: Role
+}
+
+type AnnouncementBarType {
+  id: String!
+  linkUrl: String
+  text: String!
+}
+
+type AuthUser {
+  email: String!
+  id: String!
+  type: String!
+}
+
+type Brand {
+  id: String!
+  name: String!
+  slug: String!
+}
+
+type CartItemType {
+  id: String!
+  imageUrl: String
+  productSlug: String
+  productTitle: String
+  quantity: Float!
+  variant: ProductVariant!
+}
+
+type CartType {
+  currency: String!
+  id: String!
+  items: [CartItemType!]!
+}
+
+type Category {
+  id: String!
+  name: String!
+  slug: String!
+}
+
+type CategoryType {
+  description: String
+  id: String!
+  name: String!
+  slug: String!
+  sortOrder: Float!
+}
+
+type CmsPageType {
+  content: String
+  id: String!
+  slug: String!
+  title: String!
+}
+
+type CollectionProductEdge {
+  product: Product!
+  sortOrder: Float!
+}
+
+type CollectionType {
+  description: String
+  id: String!
+  imageUrl: String
+  name: String!
+  products: [CollectionProductEdge!]!
+  slug: String!
+}
+
+type CountryType {
+  code: String!
+  id: String!
+  name: String!
+}
+
+type CurrencyType {
+  code: String!
+  decimals: Float!
+  id: String!
+  name: String!
+  symbol: String!
+}
+
+type CustomerProfile {
+  defaultAddress: Address
+  firstName: String!
+  id: String!
+  lastName: String!
+  phone: String
+  skinProfile: SkinProfile
+  totalOrders: Float!
+  totalSpent: Float!
+}
+
+type HeroBannerType {
+  id: String!
+  imageUrl: String
+  linkUrl: String
+  sortOrder: Float!
+  subtitle: String
+  title: String
+}
+
+type LocaleType {
+  code: String!
+  default: Boolean!
+  id: String!
+  name: String!
+}
+
+type LoginResponse {
+  accessToken: String!
+  expiresIn: Float!
+  refreshToken: String!
+  user: AuthUser!
+}
+
+type Mutation {
+  addToCart(cartId: String, customerId: String, quantity: Float! = 1, sessionId: String, variantId: String!): CartItemType
+  adminLogin(email: String!, password: String!): AdminLoginResponse!
+  createOrderFromCart(cartId: String!, customerId: String, email: String!, shippingAddress: String!): OrderType!
+  login(email: String!, password: String!): LoginResponse!
+  logout(refreshToken: String): Boolean!
+  refreshSession(refreshToken: String!): RefreshResponse!
+  register(input: RegisterInput!): LoginResponse!
+  removeCartItem(cartItemId: String!): Boolean!
+  updateCartItem(cartItemId: String!, quantity: Float!): CartItemType
+  updateProfile(input: UpdateProfileInput!): CustomerProfile!
+  updateSkinProfile(input: UpdateSkinProfileInput!): CustomerProfile
+}
+
+type OrderItemType {
+  id: String!
+  productTitle: String!
+  quantity: Float!
+  totalPrice: Float!
+  unitPrice: Float!
+  variantTitle: String!
+}
+
+enum OrderStatus {
+  CANCELLED
+  CONFIRMED
+  DELIVERED
+  PENDING
+  PROCESSING
+  REFUNDED
+  SHIPPED
+}
+
+type OrderType {
+  currency: String!
+  email: String!
+  id: String!
+  items: [OrderItemType!]!
+  orderNumber: String!
+  status: OrderStatus!
+  subtotal: Float!
+  total: Float!
+}
+
+type Product {
+  category: Category
+  descriptionHtml: String
+  id: String!
+  images: [ProductImage!]!
+  published: Boolean!
+  shortDescription: String
+  slug: String!
+  status: String!
+  title: String!
+  variants: [ProductVariant!]!
+  vendor: Brand
+}
+
+type ProductImage {
+  altText: String
+  id: String!
+  position: Float!
+  url: String!
+}
+
+type ProductVariant {
+  compareAtPrice: Float
+  id: String!
+  isTaxable: Boolean!
+  price: Float!
+  requiresShipping: Boolean!
+  sku: String
+  title: String!
+}
+
+type Query {
+  announcementBar: AnnouncementBarType
+  cart(customerId: String, sessionId: String): CartType!
+  categories: [CategoryType!]!
+  categoryBySlug(slug: String!): CategoryType
+  cmsPageBySlug(slug: String!): CmsPageType
+  collectionBySlug(slug: String!): CollectionType
+  collections: [CollectionType!]!
+  countries: [CountryType!]!
+  currencies: [CurrencyType!]!
+  exchangeRate(from: String!, to: String!): Float
+  featuredProducts(limit: Float): [Product!]!
+  filterOptions: [[String!]!]!
+  heroContent: [HeroBannerType!]!
+  listMyOrders: [OrderType!]!
+  locales: [LocaleType!]!
+  me: User
+  myOrderByNumber(orderNumber: String!): OrderType
+  myProfile: CustomerProfile
+  productBySlug(slug: String!): Product
+  recommendationsForProduct(limit: Float, productId: String!): [Product!]!
+  searchProducts(limit: Float, query: String!): [Product!]!
+  siteSetting(key: String!): String
+  wompiCheckoutConfig(orderId: String!): WompiCheckoutConfig
+}
+
+type RefreshResponse {
+  accessToken: String!
+  expiresIn: Float!
+  refreshToken: String!
+  user: AuthUser!
+}
+
+input RegisterInput {
+  email: String!
+  firstName: String!
+  lastName: String!
+  password: String!
+}
+
+type Role {
+  code: String!
+  id: String!
+  name: String!
+}
+
+type SkinProfile {
+  concerns: [String!]!
+  favoriteFinish: String
+  id: String!
+  sensitivities: [String!]!
+  skinTone: String
+  skinType: String
+  undertone: String
+}
+
+input UpdateProfileInput {
+  firstName: String
+  lastName: String
+  phone: String
+}
+
+input UpdateSkinProfileInput {
+  concerns: [String!]
+  favoriteFinish: String
+  sensitivities: [String!]
+  skinTone: String
+  skinType: String
+  undertone: String
+}
+
+type User {
+  adminProfile: AdminProfile
+  customerProfile: CustomerProfile
+  email: String!
+  id: String!
+  isActive: Boolean!
+  userType: UserType!
+}
+
+enum UserType {
+  ADMIN
+  CUSTOMER
+}
+
+type WompiCheckoutConfig {
+  amountInCents: Float!
+  currency: String!
+  integritySignature: String!
+  publicKey: String!
+  redirectUrl: String
+  reference: String!
+}
