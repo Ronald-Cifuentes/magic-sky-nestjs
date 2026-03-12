@@ -1,6 +1,9 @@
 import { Resolver, Query, Args } from '@nestjs/graphql';
+import { UseGuards } from '@nestjs/common';
 import { CmsService } from './cms.service';
 import { ObjectType, Field } from '@nestjs/graphql';
+import { GqlAuthGuard } from '../auth/guards/gql-auth.guard';
+import { GqlAdminGuard } from '../auth/guards/gql-admin.guard';
 
 @ObjectType()
 export class CmsPageType {
@@ -8,6 +11,7 @@ export class CmsPageType {
   @Field() slug: string;
   @Field() title: string;
   @Field({ nullable: true }) content?: string;
+  @Field() published: boolean;
 }
 
 @ObjectType()
@@ -52,5 +56,11 @@ export class CmsResolver {
   @Query(() => AnnouncementBarType, { nullable: true })
   async announcementBar() {
     return this.cms.getAnnouncementBar();
+  }
+
+  @Query(() => [CmsPageType])
+  @UseGuards(GqlAuthGuard, GqlAdminGuard)
+  async adminCmsPages() {
+    return this.cms.getAllPages();
   }
 }

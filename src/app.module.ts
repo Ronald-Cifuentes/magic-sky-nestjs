@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { join } from 'path';
+import GraphQLJSON from 'graphql-type-json';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const depthLimit = require('graphql-depth-limit');
 import { ThrottlerModule } from '@nestjs/throttler';
@@ -34,13 +35,19 @@ import { LocalesModule } from './locales/locales.module';
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
       sortSchema: true,
+      resolvers: { JSON: GraphQLJSON },
       playground: process.env.NODE_ENV !== 'production',
       introspection: process.env.NODE_ENV !== 'production',
       validationRules: [depthLimit(10)],
       context: ({ req, res }: { req: any; res: any }) => ({ req, res }),
       formatError: (err) => {
         const code = err.extensions?.code || 'INTERNAL_ERROR';
-        const message = err.message || 'An error occurred';
+        let message = err.message || 'An error occurred';
+        const resp = (err.extensions?.exception as { response?: { message?: string | string[] } })?.response;
+        if (resp?.message) {
+          const msg = Array.isArray(resp.message) ? resp.message.join('; ') : resp.message;
+          if (msg) message = msg;
+        }
         return {
           message: process.env.NODE_ENV === 'production' && code === 'INTERNAL_SERVER_ERROR'
             ? 'Internal server error'

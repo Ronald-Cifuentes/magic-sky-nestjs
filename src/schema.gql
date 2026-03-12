@@ -74,11 +74,52 @@ type CategoryType {
   sortOrder: Float!
 }
 
+type CmsComponentRegistryItem {
+  allowedZones: [String!]!
+  canHaveChildren: Boolean!
+  category: String!
+  childZones: [String!]!
+  label: String!
+  requiredContext: [String!]!
+  requiredData: [String!]!
+  type: String!
+  version: Float!
+}
+
+type CmsPageDefinitionType {
+  createdAt: DateTime!
+  deletable: Boolean!
+  id: String!
+  layoutJson: JSON!
+  pageKind: CmsPageKind!
+  published: Boolean!
+  routePath: String!
+  seoDescription: String
+  seoTitle: String
+  slug: String!
+  systemKey: CmsSystemKey
+  title: String!
+  updatedAt: DateTime!
+}
+
+enum CmsPageKind {
+  CUSTOM
+  SYSTEM
+}
+
 type CmsPageType {
   content: String
   id: String!
+  published: Boolean!
   slug: String!
   title: String!
+}
+
+enum CmsSystemKey {
+  CART
+  CATALOG
+  CMS_GENERIC
+  HOME
 }
 
 type CollectionProductEdge {
@@ -108,6 +149,31 @@ type CountryType {
   name: String!
 }
 
+input CreateCmsPageInput {
+  layoutJson: JSON!
+  pageKind: CmsPageKind!
+  published: Boolean
+  routePath: String!
+  seoDescription: String
+  seoTitle: String
+  slug: String!
+  systemKey: CmsSystemKey
+  title: String!
+}
+
+input CreateProductInput {
+  categoryId: String
+  descriptionHtml: String
+  images: [ProductImageInput!]
+  published: Boolean
+  shortDescription: String
+  slug: String
+  status: String
+  title: String!
+  variants: [ProductVariantInput!]!
+  vendorId: String
+}
+
 type CurrencyType {
   code: String!
   decimals: Float!
@@ -127,6 +193,11 @@ type CustomerProfile {
   totalSpent: Float!
 }
 
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
 type HeroBannerType {
   id: String!
   imageUrl: String
@@ -135,6 +206,11 @@ type HeroBannerType {
   subtitle: String
   title: String
 }
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON
 
 type LocaleType {
   code: String!
@@ -152,7 +228,15 @@ type LoginResponse {
 
 type Mutation {
   addToCart(cartId: String, customerId: String, quantity: Float! = 1, sessionId: String, variantId: String!): CartItemType
+  adminCreateCmsPage(input: CreateCmsPageInput!): CmsPageDefinitionType!
+  adminCreateProduct(input: CreateProductInput!): Product!
+  adminDeleteCmsPage(id: String!): Boolean!
+  adminDeleteProduct(id: String!): Boolean!
+  adminDuplicateCmsPage(id: String!): CmsPageDefinitionType!
   adminLogin(email: String!, password: String!): AdminLoginResponse!
+  adminSetCmsPublished(id: String!, published: Boolean!): CmsPageDefinitionType!
+  adminUpdateCmsPage(id: String!, input: UpdateCmsPageInput!): CmsPageDefinitionType!
+  adminUpdateProduct(id: String!, input: UpdateProductInput!): Product!
   createOrderFromCart(cartId: String!, customerId: String, email: String!, shippingAddress: String!): OrderType!
   login(email: String!, password: String!): LoginResponse!
   logout(refreshToken: String): Boolean!
@@ -216,6 +300,13 @@ type ProductImage {
   url: String!
 }
 
+input ProductImageInput {
+  altText: String
+  id: String
+  position: Float
+  url: String!
+}
+
 type ProductVariant {
   compareAtPrice: Float
   id: String!
@@ -226,11 +317,28 @@ type ProductVariant {
   title: String!
 }
 
+input ProductVariantInput {
+  compareAtPrice: Float
+  id: String
+  price: Float!
+  sku: String
+  title: String
+}
+
 type Query {
+  adminBrands: [Brand!]!
+  adminCmsComponentRegistry: [CmsComponentRegistryItem!]!
+  adminCmsPageById(id: String!): CmsPageDefinitionType
+  adminCmsPages: [CmsPageType!]!
+  adminCmsPagesDetailed: [CmsPageDefinitionType!]!
+  adminOrders(limit: Float): [OrderType!]!
+  adminProductById(id: String!): Product
+  adminProducts(limit: Float, skip: Float): [Product!]!
   announcementBar: AnnouncementBarType
   cart(customerId: String, sessionId: String): CartType!
   categories: [CategoryType!]!
   categoryBySlug(slug: String!): CategoryType
+  cmsPageByRoute(routePath: String!): CmsPageDefinitionType
   cmsPageBySlug(slug: String!): CmsPageType
   collectionBySlug(slug: String!): CollectionType
   collections: [CollectionType!]!
@@ -294,6 +402,28 @@ input SubmitContactInput {
 type SubmitContactResponse {
   message: String!
   success: Boolean!
+}
+
+input UpdateCmsPageInput {
+  layoutJson: JSON
+  published: Boolean
+  seoDescription: String
+  seoTitle: String
+  slug: String
+  title: String
+}
+
+input UpdateProductInput {
+  categoryId: String
+  descriptionHtml: String
+  images: [ProductImageInput!]
+  published: Boolean
+  shortDescription: String
+  slug: String
+  status: String
+  title: String
+  variants: [ProductVariantInput!]
+  vendorId: String
 }
 
 input UpdateProfileInput {

@@ -5,6 +5,8 @@ import { CollectionsResolver } from './collections/collections.resolver';
 import { CollectionsService } from './collections/collections.service';
 import { CategoriesResolver } from './categories/categories.resolver';
 import { CategoriesService } from './categories/categories.service';
+import { BrandsResolver } from './brands/brands.resolver';
+import { BrandsService } from './brands/brands.service';
 
 @Module({
   providers: [
@@ -14,6 +16,8 @@ import { CategoriesService } from './categories/categories.service';
     CollectionsService,
     CategoriesResolver,
     CategoriesService,
+    BrandsResolver,
+    BrandsService,
   ],
   exports: [ProductsService, CollectionsService, CategoriesService],
 })

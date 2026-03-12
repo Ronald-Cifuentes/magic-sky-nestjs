@@ -25,4 +25,10 @@ export class CmsService {
       orderBy: { sortOrder: 'asc' },
     });
   }
+
+  async getAllPages() {
+    return this.prisma.cmsPage.findMany({
+      orderBy: { slug: 'asc' },
+    });
+  }
 }

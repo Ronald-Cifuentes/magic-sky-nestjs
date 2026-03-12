@@ -1,10 +1,34 @@
-import { Resolver, Query, Args } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args } from '@nestjs/graphql';
+import { UseGuards } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { Product } from './entities/product.entity';
+import { GqlAuthGuard } from '../../auth/guards/gql-auth.guard';
+import { GqlAdminGuard } from '../../auth/guards/gql-admin.guard';
+import { CreateProductInput } from './dto/product-input.dto';
+import { UpdateProductInput } from './dto/product-input.dto';
 
 @Resolver(() => Product)
 export class ProductsResolver {
   constructor(private products: ProductsService) {}
+
+  @Query(() => Product, { nullable: true })
+  @UseGuards(GqlAuthGuard, GqlAdminGuard)
+  async adminProductById(@Args('id') id: string) {
+    return this.products.findByIdForAdmin(id);
+  }
+
+  @Query(() => [Product])
+  @UseGuards(GqlAuthGuard, GqlAdminGuard)
+  async adminProducts(
+    @Args('limit', { nullable: true }) limit?: number,
+    @Args('skip', { nullable: true }) skip?: number,
+  ) {
+    return this.products.findAllForAdmin({
+      take: limit ?? 100,
+      skip: skip ?? 0,
+      orderBy: { createdAt: 'desc' },
+    });
+  }
 
   @Query(() => [Product])
   async featuredProducts(@Args('limit', { nullable: true }) limit?: number) {
@@ -36,5 +60,26 @@ export class ProductsResolver {
     @Args('limit', { nullable: true }) limit?: number,
   ) {
     return this.products.recommendationsForProduct(productId, limit ?? 4);
+  }
+
+  @Mutation(() => Product)
+  @UseGuards(GqlAuthGuard, GqlAdminGuard)
+  async adminCreateProduct(@Args('input') input: CreateProductInput) {
+    return this.products.create(input as any);
+  }
+
+  @Mutation(() => Product)
+  @UseGuards(GqlAuthGuard, GqlAdminGuard)
+  async adminUpdateProduct(
+    @Args('id') id: string,
+    @Args('input') input: UpdateProductInput,
+  ) {
+    return this.products.update(id, input as any);
+  }
+
+  @Mutation(() => Boolean)
+  @UseGuards(GqlAuthGuard, GqlAdminGuard)
+  async adminDeleteProduct(@Args('id') id: string) {
+    return this.products.delete(id);
   }
 }

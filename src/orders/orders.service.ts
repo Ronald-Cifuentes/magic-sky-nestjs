@@ -68,6 +68,14 @@ export class OrdersService {
     });
   }
 
+  async findAll(limit = 50) {
+    return this.prisma.order.findMany({
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+      include: { items: { include: { variant: { include: { product: true } } } } },
+    });
+  }
+
   async findByNumber(orderNumber: string, customerId?: string) {
     const where: { orderNumber: string; customerId?: string } = { orderNumber };
     if (customerId) where.customerId = customerId;

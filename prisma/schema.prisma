@@ -644,6 +644,37 @@ model ShippingRule {
 }
 
 // ============ CMS & CONFIG ============
+enum CmsPageKind {
+  SYSTEM
+  CUSTOM
+}
+
+enum CmsSystemKey {
+  HOME
+  CATALOG
+  CART
+  CMS_GENERIC
+}
+
+model CmsPageDefinition {
+  id           String        @id @default(uuid())
+  title        String
+  slug         String        @unique
+  routePath    String        @unique @map("route_path")
+  pageKind     CmsPageKind   @map("page_kind")
+  systemKey    CmsSystemKey? @map("system_key")
+  published    Boolean       @default(false)
+  deletable    Boolean       @default(true)
+  layoutJson   Json          @map("layout_json")
+  seoTitle     String?       @map("seo_title")
+  seoDescription String?     @map("seo_description")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  @@index([routePath])
+  @@index([pageKind])
+}
+
 model CmsPage {
   id          String   @id @default(uuid())
   slug        String   @unique

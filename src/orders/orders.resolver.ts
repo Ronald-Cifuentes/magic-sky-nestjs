@@ -3,6 +3,7 @@ import { UseGuards } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CustomersService } from '../customers/customers.service';
 import { GqlAuthGuard } from '../auth/guards/gql-auth.guard';
+import { GqlAdminGuard } from '../auth/guards/gql-admin.guard';
 import { GqlCustomerGuard } from '../auth/guards/gql-customer.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User } from '../users/entities/user.entity';
@@ -50,6 +51,12 @@ export class OrdersResolver {
   ) {
     const shippingAddress = JSON.parse(shippingAddressJson);
     return this.orders.createFromCart(cartId, email, shippingAddress, customerId);
+  }
+
+  @Query(() => [OrderType])
+  @UseGuards(GqlAuthGuard, GqlAdminGuard)
+  async adminOrders(@Args('limit', { nullable: true }) limit?: number) {
+    return this.orders.findAll(limit ?? 50);
   }
 
   @Query(() => [OrderType])
