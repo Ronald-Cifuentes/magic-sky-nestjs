@@ -16,6 +16,7 @@ import { CartModule } from './cart/cart.module';
 import { OrdersModule } from './orders/orders.module';
 import { PaymentsModule } from './payments/payments.module';
 import { CmsModule } from './cms/cms.module';
+import { ContactModule } from './contact/contact.module';
 import { SettingsModule } from './settings/settings.module';
 import { CountriesModule } from './countries/countries.module';
 import { CurrenciesModule } from './currencies/currencies.module';
@@ -57,6 +58,7 @@ import { LocalesModule } from './locales/locales.module';
     OrdersModule,
     PaymentsModule,
     CmsModule,
+    ContactModule,
     SettingsModule,
     CountriesModule,
     CurrenciesModule,

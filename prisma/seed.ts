@@ -165,9 +165,27 @@ async function main() {
     },
   }).catch(() => {});
 
+  const nosotrosContent = `<h2>Nuestra historia</h2>
+<p>En <strong>Magic Sky</strong> creemos que cada persona merece sentirse hermosa, segura y auténtica. Nacimos en Medellín con la misión de acercar productos de belleza y maquillaje de alta calidad a quienes buscan realzar su estilo sin complicaciones.</p>
+
+<h2>Nuestra pasión</h2>
+<p>Somos apasionados por la cosmética y el cuidado personal. Cada producto que ofrecemos ha sido seleccionado con cuidado, pensando en durabilidad, pigmentación y fórmulas que respetan tu piel. Trabajamos con marcas reconocidas y también descubrimos tesoros locales que merecen ser conocidos.</p>
+
+<h2>Compromiso con la calidad</h2>
+<p>Nos comprometemos a ofrecerte productos originales, con información clara sobre ingredientes y uso. Creemos en la transparencia: si un producto no cumple tus expectativas, estamos aquí para ayudarte.</p>
+
+<h2>Comunidad Magic Sky</h2>
+<p>Más que una tienda, somos una comunidad de personas que celebran la diversidad y la expresión personal. Ya sea que busques un look natural para el día a día o un maquillaje impactante para una ocasión especial, en Magic Sky encontrarás las herramientas para lograrlo.</p>
+
+<p><em>Gracias por confiar en nosotros. Estamos aquí para acompañarte en cada paso de tu viaje de belleza.</em></p>`;
+
+  await prisma.cmsPage.upsert({
+    where: { slug: 'nosotros' },
+    create: { slug: 'nosotros', title: 'Nosotros', content: nosotrosContent, published: true },
+    update: { content: nosotrosContent },
+  });
   await prisma.cmsPage.createMany({
     data: [
-      { slug: 'nosotros', title: 'Nosotros', content: '<p>Magic Sky - Tu tienda de belleza y maquillaje.</p>', published: true },
       { slug: 'preguntas-frecuentes', title: 'Preguntas Frecuentes', content: '<p>FAQ</p>', published: true },
       { slug: 'politicas', title: 'Nuestras Políticas', content: '<p>Políticas de la tienda.</p>', published: true },
       { slug: 'tratamiento-de-datos', title: 'Tratamiento de Datos', content: '<p>Política de tratamiento de datos personales.</p>', published: true },

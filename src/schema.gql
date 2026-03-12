@@ -95,6 +95,13 @@ type CollectionType {
   slug: String!
 }
 
+type ContactInfoType {
+  address: String
+  email: String
+  whatsappText: String
+  whatsappUrl: String
+}
+
 type CountryType {
   code: String!
   id: String!
@@ -152,6 +159,7 @@ type Mutation {
   refreshSession(refreshToken: String!): RefreshResponse!
   register(input: RegisterInput!): LoginResponse!
   removeCartItem(cartItemId: String!): Boolean!
+  submitContactMessage(input: SubmitContactInput!): SubmitContactResponse!
   updateCartItem(cartItemId: String!, quantity: Float!): CartItemType
   updateProfile(input: UpdateProfileInput!): CustomerProfile!
   updateSkinProfile(input: UpdateSkinProfileInput!): CustomerProfile
@@ -226,6 +234,7 @@ type Query {
   cmsPageBySlug(slug: String!): CmsPageType
   collectionBySlug(slug: String!): CollectionType
   collections: [CollectionType!]!
+  contactInfo: ContactInfoType!
   countries: [CountryType!]!
   currencies: [CurrencyType!]!
   exchangeRate(from: String!, to: String!): Float
@@ -272,6 +281,19 @@ type SkinProfile {
   skinTone: String
   skinType: String
   undertone: String
+}
+
+input SubmitContactInput {
+  email: String!
+  message: String!
+  name: String!
+  phone: String
+  subject: String
+}
+
+type SubmitContactResponse {
+  message: String!
+  success: Boolean!
 }
 
 input UpdateProfileInput {

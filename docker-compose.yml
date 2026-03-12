@@ -1,3 +1,6 @@
+# Magic Sky Backend - PostgreSQL + API
+# Uso: cd backend && docker compose up -d
+
 services:
   postgres:
     image: postgres:15-alpine
@@ -10,6 +13,32 @@ services:
       - "5432:5432"
     volumes:
       - magic_sky_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: node:20-slim
+    container_name: magic-sky-backend
+    working_dir: /app
+    volumes:
+      - .:/app
+    ports:
+      - "4000:4000"
+    environment:
+      CI: "true"
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/magic_sky?schema=public
+      NODE_ENV: development
+      PORT: 4000
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-your-super-secret-access-key-min-32-chars}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-your-super-secret-refresh-key-min-32-chars}
+      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173,http://localhost:80
+    command: sh -c "apt-get update -y && apt-get install -y openssl ca-certificates procps && rm -rf /var/lib/apt/lists/* && corepack enable pnpm && pnpm install && npx prisma generate && (export DATABASE_URL=postgresql://postgres:postgres@postgres:5432/magic_sky?schema=public && npx prisma migrate deploy) && pnpm start:dev"
+    depends_on:
+      postgres:
+        condition: service_healthy
 
 volumes:
   magic_sky_pg_data:
