@@ -36,17 +36,30 @@ export class ProductsService {
     });
   }
 
-  async featured(limit = 12) {
-    return this.findMany({ take: limit, orderBy: { createdAt: 'desc' } });
+  async featured(limit = 12, categoryId?: string, categorySlug?: string) {
+    const where: Prisma.ProductWhereInput = { published: true };
+    if (categoryId) where.categoryId = categoryId;
+    if (categorySlug && !categoryId) {
+      const cat = await this.prisma.category.findUnique({ where: { slug: categorySlug } });
+      if (cat) where.categoryId = cat.id;
+    }
+    return this.findMany({ where, take: limit, orderBy: { createdAt: 'desc' } });
   }
 
-  async search(query: string, filters?: Record<string, string[]>, limit = 24) {
+  async search(query: string, filters?: Record<string, string[]>, limit = 24, categoryId?: string, categorySlug?: string) {
     const where: Prisma.ProductWhereInput = { published: true };
-    if (query?.trim()) {
+    const q = query?.trim();
+    if (q) {
       where.OR = [
-        { title: { contains: query, mode: 'insensitive' } },
-        { descriptionHtml: { contains: query, mode: 'insensitive' } },
+        { title: { contains: q, mode: 'insensitive' } },
+        { descriptionHtml: { contains: q, mode: 'insensitive' } },
+        { shortDescription: { contains: q, mode: 'insensitive' } },
       ];
+    }
+    if (categoryId) where.categoryId = categoryId;
+    if (categorySlug && !categoryId) {
+      const cat = await this.prisma.category.findUnique({ where: { slug: categorySlug } });
+      if (cat) where.categoryId = cat.id;
     }
     return this.findMany({ where, take: limit });
   }

@@ -50,9 +50,25 @@ export class CmsPageDefinitionService {
   }
 
   async findByRoute(routePath: string) {
-    return this.prisma.cmsPageDefinition.findUnique({
+    return this.prisma.cmsPageDefinition.findFirst({
       where: { routePath, published: true },
     });
+  }
+
+  /** Returns page by route regardless of published status. Used to detect unpublished pages. */
+  async findByRouteIncludingUnpublished(routePath: string) {
+    return this.prisma.cmsPageDefinition.findFirst({
+      where: { routePath },
+    });
+  }
+
+  /** Returns route paths of all published pages. Used for nav/footer filtering. */
+  async getPublishedRoutePaths(): Promise<string[]> {
+    const pages = await this.prisma.cmsPageDefinition.findMany({
+      where: { published: true },
+      select: { routePath: true },
+    });
+    return pages.map((p) => p.routePath);
   }
 
   async create(input: {

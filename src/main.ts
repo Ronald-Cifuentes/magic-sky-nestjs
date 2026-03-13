@@ -1,8 +1,23 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { BadRequestException, ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import helmet from 'helmet';
 import * as cookieParser from 'cookie-parser';
+import { ValidationError } from 'class-validator';
+
+function flattenValidationErrors(errors: ValidationError[], prefix = ''): string[] {
+  const messages: string[] = [];
+  for (const err of errors) {
+    const prop = prefix ? `${prefix}.${err.property}` : err.property;
+    if (err.constraints) {
+      messages.push(...Object.values(err.constraints));
+    }
+    if (err.children?.length) {
+      messages.push(...flattenValidationErrors(err.children, prop));
+    }
+  }
+  return messages;
+}
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -24,6 +39,10 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
       transform: true,
       transformOptions: { enableImplicitConversion: true },
+      exceptionFactory: (errors: ValidationError[]) => {
+        const messages = flattenValidationErrors(errors);
+        return new BadRequestException({ message: messages });
+      },
     }),
   );
 

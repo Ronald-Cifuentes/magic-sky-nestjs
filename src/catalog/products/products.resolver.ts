@@ -31,8 +31,12 @@ export class ProductsResolver {
   }
 
   @Query(() => [Product])
-  async featuredProducts(@Args('limit', { nullable: true }) limit?: number) {
-    return this.products.featured(limit ?? 12);
+  async featuredProducts(
+    @Args('limit', { nullable: true }) limit?: number,
+    @Args('categoryId', { nullable: true }) categoryId?: string,
+    @Args('categorySlug', { nullable: true }) categorySlug?: string,
+  ) {
+    return this.products.featured(limit ?? 12, categoryId, categorySlug);
   }
 
   @Query(() => Product, { nullable: true })
@@ -44,8 +48,10 @@ export class ProductsResolver {
   async searchProducts(
     @Args('query') query: string,
     @Args('limit', { nullable: true }) limit?: number,
+    @Args('categoryId', { nullable: true }) categoryId?: string,
+    @Args('categorySlug', { nullable: true }) categorySlug?: string,
   ) {
-    return this.products.search(query, undefined, limit ?? 24);
+    return this.products.search(query, undefined, limit ?? 24, categoryId, categorySlug);
   }
 
   @Query(() => [[String]])

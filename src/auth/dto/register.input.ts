@@ -4,7 +4,7 @@ import { IsEmail, IsString, MinLength, MaxLength } from 'class-validator';
 @InputType()
 export class RegisterInput {
   @Field()
-  @IsEmail()
+  @IsEmail({}, { message: 'Introduce un correo electrónico válido' })
   email: string;
 
   @Field()
@@ -14,13 +14,13 @@ export class RegisterInput {
 
   @Field()
   @IsString()
-  @MinLength(2)
-  @MaxLength(50)
+  @MinLength(2, { message: 'El nombre debe tener al menos 2 caracteres' })
+  @MaxLength(50, { message: 'El nombre no puede exceder 50 caracteres' })
   firstName: string;
 
   @Field()
   @IsString()
-  @MinLength(2)
-  @MaxLength(50)
+  @MinLength(2, { message: 'El apellido debe tener al menos 2 caracteres' })
+  @MaxLength(50, { message: 'El apellido no puede exceder 50 caracteres' })
   lastName: string;
 }

@@ -22,7 +22,7 @@ export class CmsPageDefinitionType {
   @Field(() => CmsSystemKey, { nullable: true }) systemKey: CmsSystemKey | null;
   @Field() published: boolean;
   @Field() deletable: boolean;
-  @Field(() => GraphQLJSON) layoutJson: object;
+  @Field(() => GraphQLJSON, { nullable: true }) layoutJson: object | null;
   @Field(() => String, { nullable: true }) seoTitle: string | null;
   @Field(() => String, { nullable: true }) seoDescription: string | null;
   @Field() createdAt: Date;
@@ -112,9 +112,19 @@ export class CmsPageDefinitionResolver {
     return this.service.getComponentRegistry();
   }
 
+  @Query(() => [String])
+  async cmsPublishedRoutes() {
+    return this.service.getPublishedRoutePaths();
+  }
+
   @Query(() => CmsPageDefinitionType, { nullable: true })
   async cmsPageByRoute(@Args('routePath') routePath: string) {
-    return this.service.findByRoute(routePath);
+    const page = await this.service.findByRouteIncludingUnpublished(routePath);
+    if (!page) return null;
+    if (!page.published) {
+      return { ...page, layoutJson: null };
+    }
+    return page;
   }
 
   @Mutation(() => CmsPageDefinitionType)

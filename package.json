@@ -15,6 +15,7 @@
     "prisma:seed": "ts-node -r dotenv/config prisma/seed.ts",
     "import:products": "ts-node -r dotenv/config scripts/import-products.ts",
     "import:customers": "ts-node -r dotenv/config scripts/import-customers.ts",
+    "fix:inicio": "ts-node -r dotenv/config scripts/fix-inicio-page.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",

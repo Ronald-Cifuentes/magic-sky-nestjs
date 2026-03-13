@@ -90,7 +90,7 @@ type CmsPageDefinitionType {
   createdAt: DateTime!
   deletable: Boolean!
   id: String!
-  layoutJson: JSON!
+  layoutJson: JSON
   pageKind: CmsPageKind!
   published: Boolean!
   routePath: String!
@@ -147,6 +147,13 @@ type CountryType {
   code: String!
   id: String!
   name: String!
+}
+
+input CreateCategoryInput {
+  description: String
+  name: String!
+  slug: String!
+  sortOrder: Float
 }
 
 input CreateCmsPageInput {
@@ -228,13 +235,16 @@ type LoginResponse {
 
 type Mutation {
   addToCart(cartId: String, customerId: String, quantity: Float! = 1, sessionId: String, variantId: String!): CartItemType
+  adminCreateCategory(input: CreateCategoryInput!): CategoryType!
   adminCreateCmsPage(input: CreateCmsPageInput!): CmsPageDefinitionType!
   adminCreateProduct(input: CreateProductInput!): Product!
+  adminDeleteCategory(id: String!): Boolean!
   adminDeleteCmsPage(id: String!): Boolean!
   adminDeleteProduct(id: String!): Boolean!
   adminDuplicateCmsPage(id: String!): CmsPageDefinitionType!
   adminLogin(email: String!, password: String!): AdminLoginResponse!
   adminSetCmsPublished(id: String!, published: Boolean!): CmsPageDefinitionType!
+  adminUpdateCategory(id: String!, input: UpdateCategoryInput!): CategoryType!
   adminUpdateCmsPage(id: String!, input: UpdateCmsPageInput!): CmsPageDefinitionType!
   adminUpdateProduct(id: String!, input: UpdateProductInput!): Product!
   createOrderFromCart(cartId: String!, customerId: String, email: String!, shippingAddress: String!): OrderType!
@@ -327,6 +337,7 @@ input ProductVariantInput {
 
 type Query {
   adminBrands: [Brand!]!
+  adminCategories: [CategoryType!]!
   adminCmsComponentRegistry: [CmsComponentRegistryItem!]!
   adminCmsPageById(id: String!): CmsPageDefinitionType
   adminCmsPages: [CmsPageType!]!
@@ -340,13 +351,14 @@ type Query {
   categoryBySlug(slug: String!): CategoryType
   cmsPageByRoute(routePath: String!): CmsPageDefinitionType
   cmsPageBySlug(slug: String!): CmsPageType
+  cmsPublishedRoutes: [String!]!
   collectionBySlug(slug: String!): CollectionType
   collections: [CollectionType!]!
   contactInfo: ContactInfoType!
   countries: [CountryType!]!
   currencies: [CurrencyType!]!
   exchangeRate(from: String!, to: String!): Float
-  featuredProducts(limit: Float): [Product!]!
+  featuredProducts(categoryId: String, categorySlug: String, limit: Float): [Product!]!
   filterOptions: [[String!]!]!
   heroContent: [HeroBannerType!]!
   listMyOrders: [OrderType!]!
@@ -356,7 +368,7 @@ type Query {
   myProfile: CustomerProfile
   productBySlug(slug: String!): Product
   recommendationsForProduct(limit: Float, productId: String!): [Product!]!
-  searchProducts(limit: Float, query: String!): [Product!]!
+  searchProducts(categoryId: String, categorySlug: String, limit: Float, query: String!): [Product!]!
   siteSetting(key: String!): String
   wompiCheckoutConfig(orderId: String!): WompiCheckoutConfig
 }
@@ -402,6 +414,13 @@ input SubmitContactInput {
 type SubmitContactResponse {
   message: String!
   success: Boolean!
+}
+
+input UpdateCategoryInput {
+  description: String
+  name: String
+  slug: String
+  sortOrder: Float
 }
 
 input UpdateCmsPageInput {

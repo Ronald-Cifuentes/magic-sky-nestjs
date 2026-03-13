@@ -43,10 +43,12 @@ import { LocalesModule } from './locales/locales.module';
       formatError: (err) => {
         const code = err.extensions?.code || 'INTERNAL_ERROR';
         let message = err.message || 'An error occurred';
-        const resp = (err.extensions?.exception as { response?: { message?: string | string[] } })?.response;
+        const ext = err.extensions as Record<string, unknown> | undefined;
+        const exception = ext?.exception as Record<string, unknown> | undefined;
+        const resp = (exception?.response as { message?: string | string[] }) ?? (ext?.response as { message?: string | string[] });
         if (resp?.message) {
-          const msg = Array.isArray(resp.message) ? resp.message.join('; ') : resp.message;
-          if (msg) message = msg;
+          const msg = Array.isArray(resp.message) ? resp.message.join('. ') : String(resp.message);
+          if (msg && msg !== 'Bad Request Exception') message = msg;
         }
         return {
           message: process.env.NODE_ENV === 'production' && code === 'INTERNAL_SERVER_ERROR'

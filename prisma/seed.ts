@@ -212,13 +212,50 @@ async function main() {
     skipDuplicates: true,
   });
 
-  await prisma.heroBanner.createMany({
-    data: [
-      { title: 'Bienvenida a Magic Sky', subtitle: 'Belleza y maquillaje', sortOrder: 0, active: true },
-      { title: 'Nuevos productos', subtitle: 'Descubre las últimas tendencias', sortOrder: 1, active: true },
-    ],
-    skipDuplicates: true,
-  });
+  const existingHeroCount = await prisma.heroBanner.count();
+  if (existingHeroCount === 0) {
+    await prisma.heroBanner.createMany({
+      data: [
+        { title: 'Bienvenida a Magic Sky', subtitle: 'Belleza y maquillaje', sortOrder: 0, active: true },
+        { title: 'Nuevos productos', subtitle: 'Descubre las últimas tendencias', sortOrder: 1, active: true },
+      ],
+    });
+  }
+
+  const heroBanners = await prisma.heroBanner.findMany({ where: { active: true }, orderBy: { sortOrder: 'asc' } });
+  const inicioPage = await prisma.cmsPageDefinition.findFirst({ where: { routePath: '/' } });
+  if (inicioPage) {
+    const layout = (inicioPage.layoutJson as { pageVersion?: number; root?: Array<Record<string, unknown>> }) || { pageVersion: 1, root: [] };
+    const root = Array.isArray(layout.root) ? [...layout.root] : [];
+    const heroIdx = root.findIndex((n: Record<string, unknown>) => n.type === 'HeroSection');
+    if (heroIdx >= 0 && heroBanners.length > 0) {
+      const heroNode = root[heroIdx] as Record<string, unknown>;
+      const existingSlides = heroNode.props && typeof heroNode.props === 'object' && 'slides' in heroNode.props
+        ? (heroNode.props as { slides?: unknown[] }).slides
+        : null;
+      const shouldPopulate = !Array.isArray(existingSlides) || existingSlides.length === 0;
+
+      if (shouldPopulate) {
+        const slides = heroBanners.slice(0, 2).map((h) => ({
+          id: h.id,
+          title: h.title ?? '',
+          subtitle: h.subtitle ?? '',
+          imageUrl: h.imageUrl ?? '',
+          linkUrl: h.linkUrl ?? '/catalogo',
+        }));
+        root[heroIdx] = { ...root[heroIdx], props: { ...((root[heroIdx] as Record<string, unknown>).props as object), slides } };
+        console.log('Inicio HeroSection populated with', slides.length, 'slides');
+      } else {
+        console.log('Inicio HeroSection already has slides from CMS, skipping overwrite');
+      }
+    }
+
+    await prisma.cmsPageDefinition.update({
+      where: { id: inicioPage.id },
+      data: { layoutJson: { ...layout, root } as object, published: true },
+    });
+    console.log('Inicio page set to published');
+  }
 
   await prisma.featureFlag.upsert({
     where: { key: 'vto_ar' },
