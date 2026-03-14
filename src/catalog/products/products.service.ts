@@ -37,13 +37,16 @@ export class ProductsService {
   }
 
   async featured(limit = 12, categoryId?: string, categorySlug?: string) {
-    const where: Prisma.ProductWhereInput = { published: true };
-    if (categoryId) where.categoryId = categoryId;
+    const baseWhere: Prisma.ProductWhereInput = { published: true };
+    if (categoryId) baseWhere.categoryId = categoryId;
     if (categorySlug && !categoryId) {
       const cat = await this.prisma.category.findUnique({ where: { slug: categorySlug } });
-      if (cat) where.categoryId = cat.id;
+      if (cat) baseWhere.categoryId = cat.id;
     }
-    return this.findMany({ where, take: limit, orderBy: { createdAt: 'desc' } });
+    const featuredWhere = { ...baseWhere, featured: true };
+    const featured = await this.findMany({ where: featuredWhere, take: limit, orderBy: { createdAt: 'desc' } });
+    if (featured.length > 0) return featured;
+    return this.findMany({ where: baseWhere, take: limit, orderBy: { createdAt: 'desc' } });
   }
 
   async search(query: string, filters?: Record<string, string[]>, limit = 24, categoryId?: string, categorySlug?: string) {
@@ -121,6 +124,7 @@ export class ProductsService {
     vendorId?: string;
     categoryId?: string;
     published?: boolean;
+    featured?: boolean;
     status?: string;
     variants: { title?: string; price: number; compareAtPrice?: number; sku?: string }[];
     images?: { url: string; altText?: string; position?: number }[];
@@ -142,6 +146,7 @@ export class ProductsService {
         vendorId,
         categoryId,
         published: input.published ?? false,
+        featured: input.featured ?? false,
         status: input.status ?? 'draft',
         variants: {
           create: input.variants.map((v, i) => ({
@@ -179,6 +184,7 @@ export class ProductsService {
     vendorId?: string;
     categoryId?: string;
     published?: boolean;
+    featured?: boolean;
     status?: string;
     variants?: { id?: string; title?: string; price?: number; compareAtPrice?: number; sku?: string }[];
     images?: { id?: string; url?: string; altText?: string; position?: number }[];
@@ -197,6 +203,7 @@ export class ProductsService {
     if (input.vendorId != null) updates.vendor = input.vendorId ? { connect: { id: input.vendorId } } : { disconnect: true };
     if (input.categoryId != null) updates.category = input.categoryId ? { connect: { id: input.categoryId } } : { disconnect: true };
     if (input.published != null) updates.published = input.published;
+    if (input.featured != null) updates.featured = input.featured;
     if (input.status != null) updates.status = input.status;
 
     if (input.variants?.length) {
@@ -242,6 +249,21 @@ export class ProductsService {
     if (!product) throw new Error('Producto no encontrado');
     await this.prisma.product.delete({ where: { id } });
     return true;
+  }
+
+  async setFeatured(id: string, featured: boolean) {
+    const product = await this.prisma.product.findUnique({ where: { id } });
+    if (!product) throw new Error('Producto no encontrado');
+    return this.prisma.product.update({
+      where: { id },
+      data: { featured },
+      include: {
+        variants: { orderBy: { sortOrder: 'asc' } },
+        images: { orderBy: { position: 'asc' } },
+        vendor: true,
+        category: true,
+      },
+    });
   }
 
   async recommendationsForProduct(productId: string, limit = 4) {

@@ -171,6 +171,7 @@ input CreateCmsPageInput {
 input CreateProductInput {
   categoryId: String
   descriptionHtml: String
+  featured: Boolean
   images: [ProductImageInput!]
   published: Boolean
   shortDescription: String
@@ -292,6 +293,7 @@ type OrderType {
 type Product {
   category: Category
   descriptionHtml: String
+  featured: Boolean!
   id: String!
   images: [ProductImage!]!
   published: Boolean!
@@ -435,6 +437,7 @@ input UpdateCmsPageInput {
 input UpdateProductInput {
   categoryId: String
   descriptionHtml: String
+  featured: Boolean
   images: [ProductImageInput!]
   published: Boolean
   shortDescription: String

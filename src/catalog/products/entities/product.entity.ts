@@ -12,6 +12,7 @@ export class Product {
   @Field({ nullable: true }) descriptionHtml?: string;
   @Field({ nullable: true }) shortDescription?: string;
   @Field() published: boolean;
+  @Field() featured: boolean;
   @Field() status: string;
   @Field(() => [ProductVariant]) variants: ProductVariant[];
   @Field(() => [ProductImage]) images: ProductImage[];

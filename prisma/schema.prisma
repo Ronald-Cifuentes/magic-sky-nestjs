@@ -222,6 +222,7 @@ model Product {
   vendorId       String?  @map("vendor_id")
   categoryId      String?  @map("category_id")
   published       Boolean  @default(false)
+  featured        Boolean  @default(false)
   status         String   @default("draft")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")

@@ -1,4 +1,4 @@
-import { Resolver, Query, Mutation, Args } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args, ResolveField, Parent } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { Product } from './entities/product.entity';
@@ -87,5 +87,19 @@ export class ProductsResolver {
   @UseGuards(GqlAuthGuard, GqlAdminGuard)
   async adminDeleteProduct(@Args('id') id: string) {
     return this.products.delete(id);
+  }
+
+  @Mutation(() => Product)
+  @UseGuards(GqlAuthGuard, GqlAdminGuard)
+  async adminSetProductFeatured(
+    @Args('id') id: string,
+    @Args('featured') featured: boolean,
+  ) {
+    return this.products.setFeatured(id, featured);
+  }
+
+  @ResolveField(() => Boolean)
+  featured(@Parent() product: Product & { featured?: boolean | null }) {
+    return product.featured ?? false;
   }
 }

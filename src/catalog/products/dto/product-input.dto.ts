@@ -26,6 +26,7 @@ export class CreateProductInput {
   @Field({ nullable: true }) vendorId?: string;
   @Field({ nullable: true }) categoryId?: string;
   @Field({ nullable: true }) published?: boolean;
+  @Field({ nullable: true }) featured?: boolean;
   @Field({ nullable: true }) status?: string;
   @Field(() => [ProductVariantInput]) variants: ProductVariantInput[];
   @Field(() => [ProductImageInput], { nullable: true }) images?: ProductImageInput[];
@@ -40,6 +41,7 @@ export class UpdateProductInput {
   @Field({ nullable: true }) vendorId?: string;
   @Field({ nullable: true }) categoryId?: string;
   @Field({ nullable: true }) published?: boolean;
+  @Field({ nullable: true }) featured?: boolean;
   @Field({ nullable: true }) status?: string;
   @Field(() => [ProductVariantInput], { nullable: true }) variants?: ProductVariantInput[];
   @Field(() => [ProductImageInput], { nullable: true }) images?: ProductImageInput[];
