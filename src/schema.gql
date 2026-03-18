@@ -245,6 +245,7 @@ type Mutation {
   adminDuplicateCmsPage(id: String!): CmsPageDefinitionType!
   adminLogin(email: String!, password: String!): AdminLoginResponse!
   adminSetCmsPublished(id: String!, published: Boolean!): CmsPageDefinitionType!
+  adminSetProductFeatured(featured: Boolean!, id: String!): Product!
   adminUpdateCategory(id: String!, input: UpdateCategoryInput!): CategoryType!
   adminUpdateCmsPage(id: String!, input: UpdateCmsPageInput!): CmsPageDefinitionType!
   adminUpdateProduct(id: String!, input: UpdateProductInput!): Product!

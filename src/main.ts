@@ -41,7 +41,7 @@ async function bootstrap() {
       transformOptions: { enableImplicitConversion: true },
       exceptionFactory: (errors: ValidationError[]) => {
         const messages = flattenValidationErrors(errors);
-        return new BadRequestException({ message: messages });
+        return new BadRequestException(messages.length ? messages.join('; ') : 'Validation failed');
       },
     }),
   );
