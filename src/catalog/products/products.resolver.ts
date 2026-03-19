@@ -6,6 +6,15 @@ import { GqlAuthGuard } from '../../auth/guards/gql-auth.guard';
 import { GqlAdminGuard } from '../../auth/guards/gql-admin.guard';
 import { CreateProductInput } from './dto/product-input.dto';
 import { UpdateProductInput } from './dto/product-input.dto';
+import { ObjectType, Field } from '@nestjs/graphql';
+
+@ObjectType()
+class AdminProductsResultType {
+  @Field(() => [Product]) items: Product[];
+  @Field() total: number;
+  @Field() page: number;
+  @Field() pageSize: number;
+}
 
 @Resolver(() => Product)
 export class ProductsResolver {
@@ -27,6 +36,28 @@ export class ProductsResolver {
       take: limit ?? 100,
       skip: skip ?? 0,
       orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  @Query(() => AdminProductsResultType)
+  @UseGuards(GqlAuthGuard, GqlAdminGuard)
+  async adminProductsPaginated(
+    @Args('page', { nullable: true }) page?: number,
+    @Args('pageSize', { nullable: true }) pageSize?: number,
+    @Args('search', { nullable: true }) search?: string,
+    @Args('status', { nullable: true }) status?: string,
+    @Args('categoryId', { nullable: true }) categoryId?: string,
+    @Args('sortBy', { nullable: true }) sortBy?: string,
+    @Args('sortOrder', { nullable: true }) sortOrder?: string,
+  ) {
+    return this.products.findAllPaginated({
+      page,
+      pageSize,
+      search,
+      status,
+      categoryId,
+      sortBy,
+      sortOrder,
     });
   }
 

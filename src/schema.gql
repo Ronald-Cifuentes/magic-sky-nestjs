@@ -2,6 +2,17 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type AbandonedCheckoutType {
+  createdAt: DateTime!
+  currency: String!
+  customerName: String
+  email: String
+  id: String!
+  recoveryStatus: String!
+  region: String
+  total: Float!
+}
+
 type Address {
   address1: String!
   address2: String
@@ -13,6 +24,71 @@ type Address {
   zip: String
 }
 
+type AdminAbandonedCheckoutsResultType {
+  items: [AbandonedCheckoutType!]!
+  page: Float!
+  pageSize: Float!
+  total: Float!
+}
+
+type AdminBrandsResultType {
+  items: [Brand!]!
+  page: Float!
+  pageSize: Float!
+  total: Float!
+}
+
+type AdminCollectionsResultType {
+  items: [CollectionType!]!
+  page: Float!
+  pageSize: Float!
+  total: Float!
+}
+
+type AdminCustomerType {
+  createdAt: DateTime!
+  email: String
+  firstName: String!
+  id: String!
+  lastName: String!
+  phone: String
+  totalOrders: Float!
+  totalSpent: Float!
+}
+
+type AdminCustomersResultType {
+  items: [AdminCustomerType!]!
+  page: Float!
+  pageSize: Float!
+  total: Float!
+}
+
+type AdminDashboardStatsType {
+  conversionRate: Float!
+  conversionRateTrend: Float!
+  orders: Float!
+  ordersTrend: Float!
+  sessions: Float!
+  sessionsSparkline: [Int!]!
+  sessionsTrend: Float!
+  totalSales: Float!
+  totalSalesTrend: Float!
+}
+
+type AdminDraftOrdersResultType {
+  items: [DraftOrderType!]!
+  page: Float!
+  pageSize: Float!
+  total: Float!
+}
+
+type AdminInventoryResultType {
+  items: [InventoryItemType!]!
+  page: Float!
+  pageSize: Float!
+  total: Float!
+}
+
 type AdminLoginResponse {
   accessToken: String!
   expiresIn: Float!
@@ -20,11 +96,32 @@ type AdminLoginResponse {
   user: AuthUser!
 }
 
+type AdminOrdersResultType {
+  items: [OrderType!]!
+  page: Float!
+  pageSize: Float!
+  total: Float!
+}
+
+type AdminProductsResultType {
+  items: [Product!]!
+  page: Float!
+  pageSize: Float!
+  total: Float!
+}
+
 type AdminProfile {
   firstName: String!
   id: String!
   lastName: String!
   role: Role
+}
+
+type AdminPurchaseOrdersResultType {
+  items: [PurchaseOrderType!]!
+  page: Float!
+  pageSize: Float!
+  total: Float!
 }
 
 type AnnouncementBarType {
@@ -40,7 +137,9 @@ type AuthUser {
 }
 
 type Brand {
+  description: String
   id: String!
+  logoUrl: String
   name: String!
   slug: String!
 }
@@ -72,6 +171,11 @@ type CategoryType {
   name: String!
   slug: String!
   sortOrder: Float!
+}
+
+input ChangePasswordInput {
+  currentPassword: String!
+  newPassword: String!
 }
 
 type CmsComponentRegistryItem {
@@ -149,6 +253,16 @@ type CountryType {
   name: String!
 }
 
+input CreateAddressInput {
+  address1: String
+  address2: String
+  city: String
+  countryCode: String
+  phone: String
+  province: String
+  zip: String
+}
+
 input CreateCategoryInput {
   description: String
   name: String!
@@ -191,6 +305,7 @@ type CurrencyType {
 }
 
 type CustomerProfile {
+  addresses: [Address!]!
   defaultAddress: Address
   firstName: String!
   id: String!
@@ -206,6 +321,26 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
+type DraftOrderItemType {
+  id: String!
+  quantity: Float!
+  totalPrice: Float!
+  unitPrice: Float!
+  variantId: String!
+}
+
+type DraftOrderType {
+  createdAt: DateTime!
+  currency: String!
+  customerName: String
+  draftNumber: String!
+  email: String
+  id: String!
+  items: [DraftOrderItemType!]!
+  status: String!
+  total: Float!
+}
+
 type HeroBannerType {
   id: String!
   imageUrl: String
@@ -213,6 +348,18 @@ type HeroBannerType {
   sortOrder: Float!
   subtitle: String
   title: String
+}
+
+type InventoryItemType {
+  available: Float!
+  committed: Float!
+  onHand: Float!
+  productId: String!
+  productImageUrl: String
+  productTitle: String!
+  sku: String
+  unavailable: Float!
+  variantId: String!
 }
 
 """
@@ -236,27 +383,51 @@ type LoginResponse {
 
 type Mutation {
   addToCart(cartId: String, customerId: String, quantity: Float! = 1, sessionId: String, variantId: String!): CartItemType
+  adminAddProductsToCollection(collectionId: String!, productIds: [String!]!): CollectionType!
+  adminCreateBrand(description: String, logoUrl: String, name: String!, slug: String): Brand!
   adminCreateCategory(input: CreateCategoryInput!): CategoryType!
   adminCreateCmsPage(input: CreateCmsPageInput!): CmsPageDefinitionType!
+  adminCreateCollection(description: String, imageUrl: String, name: String!, slug: String): CollectionType!
+  adminCreateDraftOrder(customerId: String, email: String, itemsJson: String): DraftOrderType!
   adminCreateProduct(input: CreateProductInput!): Product!
+  adminCreatePurchaseOrder(itemsJson: String): PurchaseOrderType!
+  adminDeleteBrand(id: String!): Boolean!
   adminDeleteCategory(id: String!): Boolean!
   adminDeleteCmsPage(id: String!): Boolean!
+  adminDeleteCollection(id: String!): Boolean!
+  adminDeleteDraftOrder(id: String!): Boolean!
+  adminDeleteOrder(id: String!): Boolean!
   adminDeleteProduct(id: String!): Boolean!
+  adminDeletePurchaseOrder(id: String!): Boolean!
   adminDuplicateCmsPage(id: String!): CmsPageDefinitionType!
   adminLogin(email: String!, password: String!): AdminLoginResponse!
+  adminRemoveProductFromCollection(collectionId: String!, productId: String!): Boolean!
   adminSetCmsPublished(id: String!, published: Boolean!): CmsPageDefinitionType!
   adminSetProductFeatured(featured: Boolean!, id: String!): Product!
+  adminUpdateBrand(description: String, id: String!, logoUrl: String, name: String): Brand!
   adminUpdateCategory(id: String!, input: UpdateCategoryInput!): CategoryType!
   adminUpdateCmsPage(id: String!, input: UpdateCmsPageInput!): CmsPageDefinitionType!
+  adminUpdateCollection(description: String, id: String!, imageUrl: String, name: String, published: Boolean, slug: String): CollectionType!
+  adminUpdateCustomer(id: String!, notes: String, tagsJson: String): CustomerProfile!
+  adminUpdateDraftOrder(email: String, id: String!, status: String): DraftOrderType!
+  adminUpdateInventoryStock(quantity: Float!, variantId: String!): Boolean!
+  adminUpdateOrderStatus(id: String!, status: OrderStatus!): OrderType!
   adminUpdateProduct(id: String!, input: UpdateProductInput!): Product!
+  adminUpdatePurchaseOrder(id: String!, status: String): PurchaseOrderType!
+  cancelOrder(orderId: String!): OrderType!
+  changePassword(input: ChangePasswordInput!): Boolean!
+  createAddress(input: CreateAddressInput!): CustomerProfile
   createOrderFromCart(cartId: String!, customerId: String, email: String!, shippingAddress: String!): OrderType!
   login(email: String!, password: String!): LoginResponse!
   logout(refreshToken: String): Boolean!
   refreshSession(refreshToken: String!): RefreshResponse!
   register(input: RegisterInput!): LoginResponse!
   removeCartItem(cartItemId: String!): Boolean!
+  setDefaultAddress(addressId: String!): CustomerProfile
   submitContactMessage(input: SubmitContactInput!): SubmitContactResponse!
+  updateAddress(id: String!, input: UpdateAddressInput!): CustomerProfile
   updateCartItem(cartItemId: String!, quantity: Float!): CartItemType
+  updateCustomerEmail(input: UpdateEmailInput!): Boolean!
   updateProfile(input: UpdateProfileInput!): CustomerProfile!
   updateSkinProfile(input: UpdateSkinProfileInput!): CustomerProfile
 }
@@ -281,11 +452,15 @@ enum OrderStatus {
 }
 
 type OrderType {
+  createdAt: DateTime!
   currency: String!
+  customerName: String
   email: String!
+  fulfillmentStatus: String!
   id: String!
   items: [OrderItemType!]!
   orderNumber: String!
+  paymentStatus: String!
   status: OrderStatus!
   subtotal: Float!
   total: Float!
@@ -338,16 +513,51 @@ input ProductVariantInput {
   title: String
 }
 
+type PurchaseOrderItemType {
+  id: String!
+  productId: String
+  quantity: Float!
+  unitCost: Int
+  variantId: String
+}
+
+type PurchaseOrderType {
+  createdAt: DateTime!
+  currency: String!
+  expectedDate: DateTime
+  id: String!
+  items: [PurchaseOrderItemType!]!
+  poNumber: String!
+  status: String!
+  supplierId: String
+  total: Float!
+}
+
 type Query {
+  adminAbandonedCheckouts(page: Float, pageSize: Float, recoveryStatus: String, region: String, search: String): AdminAbandonedCheckoutsResultType!
+  adminBrandById(id: String!): Brand
   adminBrands: [Brand!]!
+  adminBrandsPaginated(page: Float, pageSize: Float, search: String): AdminBrandsResultType!
   adminCategories: [CategoryType!]!
   adminCmsComponentRegistry: [CmsComponentRegistryItem!]!
   adminCmsPageById(id: String!): CmsPageDefinitionType
   adminCmsPages: [CmsPageType!]!
   adminCmsPagesDetailed: [CmsPageDefinitionType!]!
+  adminCollectionById(id: String!): CollectionType
+  adminCollections(page: Float, pageSize: Float, search: String, sortBy: String, sortOrder: String): AdminCollectionsResultType!
+  adminCustomerById(id: String!): AdminCustomerType
+  adminCustomers(page: Float, pageSize: Float, search: String, sortBy: String, sortOrder: String): AdminCustomersResultType!
+  adminDashboardStats(channel: String, period: String): AdminDashboardStatsType!
+  adminDraftOrderById(id: String!): DraftOrderType
+  adminDraftOrders(page: Float, pageSize: Float, search: String, status: String): AdminDraftOrdersResultType!
+  adminInventoryItems(page: Float, pageSize: Float, search: String, sortBy: String): AdminInventoryResultType!
   adminOrders(limit: Float): [OrderType!]!
+  adminOrdersPaginated(fulfillmentStatus: String, page: Float, pageSize: Float, paymentStatus: String, search: String, status: String): AdminOrdersResultType!
   adminProductById(id: String!): Product
   adminProducts(limit: Float, skip: Float): [Product!]!
+  adminProductsPaginated(categoryId: String, page: Float, pageSize: Float, search: String, sortBy: String, sortOrder: String, status: String): AdminProductsResultType!
+  adminPurchaseOrderById(id: String!): PurchaseOrderType
+  adminPurchaseOrders(page: Float, pageSize: Float, search: String, status: String): AdminPurchaseOrdersResultType!
   announcementBar: AnnouncementBarType
   cart(customerId: String, sessionId: String): CartType!
   categories: [CategoryType!]!
@@ -369,6 +579,7 @@ type Query {
   me: User
   myOrderByNumber(orderNumber: String!): OrderType
   myProfile: CustomerProfile
+  orderById(id: String!): OrderType
   productBySlug(slug: String!): Product
   recommendationsForProduct(limit: Float, productId: String!): [Product!]!
   searchProducts(categoryId: String, categorySlug: String, limit: Float, query: String!): [Product!]!
@@ -419,6 +630,16 @@ type SubmitContactResponse {
   success: Boolean!
 }
 
+input UpdateAddressInput {
+  address1: String
+  address2: String
+  city: String
+  countryCode: String
+  phone: String
+  province: String
+  zip: String
+}
+
 input UpdateCategoryInput {
   description: String
   name: String
@@ -433,6 +654,11 @@ input UpdateCmsPageInput {
   seoTitle: String
   slug: String
   title: String
+}
+
+input UpdateEmailInput {
+  currentPassword: String!
+  newEmail: String!
 }
 
 input UpdateProductInput {

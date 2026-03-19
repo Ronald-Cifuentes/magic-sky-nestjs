@@ -1,5 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
+import { Prisma } from '@prisma/client';
+
+export interface AbandonedCheckoutResult {
+  id: string;
+  createdAt: Date;
+  customerName?: string | null;
+  email?: string | null;
+  region?: string | null;
+  recoveryStatus: string;
+  total: number;
+  currency: string;
+}
+
+export interface AdminAbandonedCheckoutsResult {
+  items: AbandonedCheckoutResult[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
 
 @Injectable()
 export class CartService {
@@ -115,5 +134,71 @@ export class CartService {
   async removeItem(cartItemId: string) {
     await this.prisma.cartItem.delete({ where: { id: cartItemId } });
     return true;
+  }
+
+  async findAbandonedCheckouts(args: {
+    page?: number;
+    pageSize?: number;
+    search?: string;
+    region?: string;
+    recoveryStatus?: string;
+  }): Promise<AdminAbandonedCheckoutsResult> {
+    const page = args.page ?? 1;
+    const pageSize = Math.min(args.pageSize ?? 50, 100);
+    const skip = (page - 1) * pageSize;
+
+    const where: Prisma.CartWhereInput = {
+      items: { some: {} },
+    };
+
+    if (args.search?.trim()) {
+      const q = args.search.trim();
+      where.OR = [
+        { id: { contains: q, mode: 'insensitive' } },
+        { customer: { firstName: { contains: q, mode: 'insensitive' } } },
+        { customer: { lastName: { contains: q, mode: 'insensitive' } } },
+      ];
+    }
+
+    const [carts, total] = await Promise.all([
+      this.prisma.cart.findMany({
+        where,
+        skip,
+        take: pageSize,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          items: {
+            include: {
+              variant: { include: { product: true } },
+            },
+          },
+          customer: { include: { user: true } },
+        },
+      }),
+      this.prisma.cart.count({ where }),
+    ]);
+
+    const items: AbandonedCheckoutResult[] = carts.map((cart) => {
+      let totalCents = 0;
+      for (const item of cart.items) {
+        totalCents += item.variant.price * item.quantity;
+      }
+      const customerName = cart.customer
+        ? `${cart.customer.firstName} ${cart.customer.lastName}`.trim()
+        : null;
+      const email = (cart.customer as any)?.user?.email ?? null;
+      return {
+        id: cart.id,
+        createdAt: cart.createdAt,
+        customerName,
+        email,
+        region: 'Colombia',
+        recoveryStatus: 'No recuperado',
+        total: totalCents,
+        currency: cart.currency,
+      };
+    });
+
+    return { items, total, page, pageSize };
   }
 }

@@ -97,6 +97,70 @@ export class ProductsService {
     });
   }
 
+  async findAllPaginated(args: {
+    page?: number;
+    pageSize?: number;
+    search?: string;
+    status?: string;
+    categoryId?: string;
+    sortBy?: string;
+    sortOrder?: string;
+  }) {
+    const page = args.page ?? 1;
+    const pageSize = Math.min(args.pageSize ?? 50, 100);
+    const skip = (page - 1) * pageSize;
+
+    const where: Prisma.ProductWhereInput = {};
+
+    if (args.search?.trim()) {
+      const q = args.search.trim();
+      where.OR = [
+        { title: { contains: q, mode: 'insensitive' } },
+        { slug: { contains: q, mode: 'insensitive' } },
+        { descriptionHtml: { contains: q, mode: 'insensitive' } },
+        { shortDescription: { contains: q, mode: 'insensitive' } },
+      ];
+    }
+
+    if (args.status) {
+      if (args.status === 'active') {
+        where.published = true;
+        where.status = 'active';
+      } else if (args.status === 'draft') {
+        where.published = false;
+      } else if (args.status === 'archived') {
+        where.status = 'archived';
+      }
+    }
+
+    if (args.categoryId) where.categoryId = args.categoryId;
+
+    const orderBy: Prisma.ProductOrderByWithRelationInput = {};
+    if (args.sortBy === 'title') {
+      orderBy.title = (args.sortOrder as 'asc' | 'desc') || 'asc';
+    } else {
+      orderBy.createdAt = (args.sortOrder as 'asc' | 'desc') || 'desc';
+    }
+
+    const [items, total] = await Promise.all([
+      this.prisma.product.findMany({
+        where,
+        skip,
+        take: pageSize,
+        orderBy,
+        include: {
+          variants: { orderBy: { sortOrder: 'asc' } },
+          images: { orderBy: { position: 'asc' } },
+          vendor: true,
+          category: true,
+        },
+      }),
+      this.prisma.product.count({ where }),
+    ]);
+
+    return { items, total, page, pageSize };
+  }
+
   async findByIdForAdmin(id: string) {
     return this.prisma.product.findUnique({
       where: { id },

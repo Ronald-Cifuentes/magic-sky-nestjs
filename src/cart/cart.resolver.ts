@@ -1,7 +1,10 @@
 import { Resolver, Query, Mutation, Args, ResolveField, Parent } from '@nestjs/graphql';
+import { UseGuards } from '@nestjs/common';
 import { CartService } from './cart.service';
 import { ObjectType, Field } from '@nestjs/graphql';
 import { ProductVariant } from '../catalog/products/entities/product-variant.entity';
+import { GqlAuthGuard } from '../auth/guards/gql-auth.guard';
+import { GqlAdminGuard } from '../auth/guards/gql-admin.guard';
 
 @ObjectType()
 export class CartItemType {
@@ -18,6 +21,26 @@ export class CartType {
   @Field() id: string;
   @Field() currency: string;
   @Field(() => [CartItemType]) items: CartItemType[];
+}
+
+@ObjectType()
+class AbandonedCheckoutType {
+  @Field() id: string;
+  @Field() createdAt: Date;
+  @Field(() => String, { nullable: true }) customerName?: string | null;
+  @Field(() => String, { nullable: true }) email?: string | null;
+  @Field(() => String, { nullable: true }) region?: string | null;
+  @Field() recoveryStatus: string;
+  @Field() total: number;
+  @Field() currency: string;
+}
+
+@ObjectType()
+class AdminAbandonedCheckoutsResultType {
+  @Field(() => [AbandonedCheckoutType]) items: AbandonedCheckoutType[];
+  @Field() total: number;
+  @Field() page: number;
+  @Field() pageSize: number;
 }
 
 @Resolver(() => CartItemType)
@@ -74,5 +97,23 @@ export class CartResolver {
   @Mutation(() => Boolean)
   async removeCartItem(@Args('cartItemId') cartItemId: string) {
     return this.cartService.removeItem(cartItemId);
+  }
+
+  @Query(() => AdminAbandonedCheckoutsResultType)
+  @UseGuards(GqlAuthGuard, GqlAdminGuard)
+  async adminAbandonedCheckouts(
+    @Args('page', { nullable: true }) page?: number,
+    @Args('pageSize', { nullable: true }) pageSize?: number,
+    @Args('search', { nullable: true }) search?: string,
+    @Args('region', { nullable: true }) region?: string,
+    @Args('recoveryStatus', { nullable: true }) recoveryStatus?: string,
+  ) {
+    return this.cartService.findAbandonedCheckouts({
+      page,
+      pageSize,
+      search,
+      region,
+      recoveryStatus,
+    });
   }
 }

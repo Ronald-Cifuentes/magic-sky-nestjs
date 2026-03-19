@@ -1,4 +1,4 @@
-import { Resolver, Query, Mutation, Args } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args, ResolveField, Parent } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CustomersService } from '../customers/customers.service';
@@ -32,7 +32,16 @@ export class OrderType {
   @Field() subtotal: number;
   @Field() total: number;
   @Field() currency: string;
+  @Field() createdAt: Date;
   @Field(() => [OrderItemType]) items: OrderItemType[];
+}
+
+@ObjectType()
+export class AdminOrdersResultType {
+  @Field(() => [OrderType]) items: OrderType[];
+  @Field() total: number;
+  @Field() page: number;
+  @Field() pageSize: number;
 }
 
 @Resolver(() => OrderType)
@@ -41,6 +50,11 @@ export class OrdersResolver {
     private orders: OrdersService,
     private customers: CustomersService,
   ) {}
+
+  @Query(() => OrderType, { nullable: true })
+  async orderById(@Args('id') id: string) {
+    return this.orders.findById(id);
+  }
 
   @Mutation(() => OrderType)
   async createOrderFromCart(
@@ -57,6 +71,68 @@ export class OrdersResolver {
   @UseGuards(GqlAuthGuard, GqlAdminGuard)
   async adminOrders(@Args('limit', { nullable: true }) limit?: number) {
     return this.orders.findAll(limit ?? 50);
+  }
+
+  @Query(() => AdminOrdersResultType)
+  @UseGuards(GqlAuthGuard, GqlAdminGuard)
+  async adminOrdersPaginated(
+    @Args('page', { nullable: true }) page?: number,
+    @Args('pageSize', { nullable: true }) pageSize?: number,
+    @Args('search', { nullable: true }) search?: string,
+    @Args('status', { nullable: true }) status?: OrderStatus,
+    @Args('paymentStatus', { nullable: true }) paymentStatus?: string,
+    @Args('fulfillmentStatus', { nullable: true }) fulfillmentStatus?: string,
+  ) {
+    return this.orders.findAllPaginated({
+      page,
+      pageSize,
+      search,
+      status,
+      paymentStatus,
+      fulfillmentStatus,
+    });
+  }
+
+  @Mutation(() => OrderType)
+  @UseGuards(GqlAuthGuard, GqlAdminGuard)
+  async adminUpdateOrderStatus(
+    @Args('id') id: string,
+    @Args('status', { type: () => OrderStatus }) status: OrderStatus,
+  ) {
+    return this.orders.updateStatus(id, status);
+  }
+
+  @ResolveField(() => String, { nullable: true })
+  customerName(@Parent() order: { customer?: { firstName: string; lastName: string } | null }) {
+    if (!order.customer) return null;
+    return `${order.customer.firstName} ${order.customer.lastName}`.trim();
+  }
+
+  @ResolveField(() => String)
+  paymentStatus(@Parent() order: { payments?: { status: string }[]; status: string }) {
+    if (order.status === 'CANCELLED') return 'Anulado';
+    const paid = order.payments?.some((p) => p.status === 'APPROVED');
+    if (paid) return 'Pagado';
+    return 'No pagado';
+  }
+
+  @ResolveField(() => String)
+  fulfillmentStatus(@Parent() order: { shipments?: { status: string }[] }) {
+    const fulfilled = order.shipments?.some((s) => s.status && s.status !== 'pending');
+    return fulfilled ? 'Preparado' : 'No preparado';
+  }
+
+  @Mutation(() => OrderType)
+  @UseGuards(GqlAuthGuard, GqlCustomerGuard)
+  async cancelOrder(@CurrentUser() user: User, @Args('orderId') orderId: string) {
+    return this.orders.cancelOrderByCustomer(orderId, user.id);
+  }
+
+  @Mutation(() => Boolean)
+  @UseGuards(GqlAuthGuard, GqlAdminGuard)
+  async adminDeleteOrder(@Args('id') id: string) {
+    await this.orders.adminDeleteOrder(id);
+    return true;
   }
 
   @Query(() => [OrderType])

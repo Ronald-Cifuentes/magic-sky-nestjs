@@ -11,5 +11,6 @@ export class CustomerProfile {
   @Field() totalSpent: number;
   @Field() totalOrders: number;
   @Field(() => Address, { nullable: true }) defaultAddress?: Address;
+  @Field(() => [Address]) addresses: Address[];
   @Field(() => SkinProfile, { nullable: true }) skinProfile?: SkinProfile;
 }

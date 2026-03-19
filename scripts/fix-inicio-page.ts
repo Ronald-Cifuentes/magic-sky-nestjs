@@ -20,8 +20,21 @@ async function main() {
   const layout = (inicioPage.layoutJson as { pageVersion?: number; root?: Array<Record<string, unknown>> }) || { pageVersion: 1, root: [] };
   const root = Array.isArray(layout.root) ? [...layout.root] : [];
   const heroIdx = root.findIndex((n: Record<string, unknown>) => n.type === 'HeroSection');
+  const hasAnnouncementBar = root.some((n: Record<string, unknown>) => n.type === 'AnnouncementBar');
 
   let updated = false;
+
+  if (!hasAnnouncementBar) {
+    root.unshift({
+      id: `announcement_${Date.now()}`,
+      type: 'AnnouncementBar',
+      props: { messages: [{ text: 'EL NÚMERO DE GUÍA SE ENVÍA POR WHATSAPP O CORREO.', linkUrl: '' }] },
+      zone: 'header',
+      children: [],
+    });
+    console.log('Added AnnouncementBar with default message');
+    updated = true;
+  }
 
   if (heroIdx >= 0) {
     const heroNode = root[heroIdx] as Record<string, unknown>;

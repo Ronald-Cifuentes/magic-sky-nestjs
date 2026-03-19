@@ -71,35 +71,42 @@ export class WompiService {
       order.currency,
     );
 
+    const configured = this.config.get('WOMPI_REDIRECT_URL', 'http://localhost:5173/checkout/complete');
+    const base = configured.includes('checkout/complete') ? configured.replace(/\/checkout\/complete.*$/, '') : configured.replace(/\/$/, '');
+    const redirectUrl = `${base}/checkout/complete?orderId=${orderId}`;
+
     return {
       publicKey: this.publicKey,
       reference,
       currency: order.currency,
       amountInCents: order.total,
       integritySignature: signature,
-      redirectUrl: this.config.get('WOMPI_REDIRECT_URL', 'http://localhost:5173/checkout/complete'),
+      redirectUrl,
     };
   }
 
   async handleWebhook(payload: Record<string, unknown>): Promise<boolean> {
-    const eventId = payload.event_id as string;
-    const existing = await this.prisma.webhookLog.findFirst({
-      where: { eventId, source: 'wompi' },
-    });
+    const eventId = (payload.event_id ?? (payload as { event_id?: string }).event_id) as string | undefined;
+    const idForLog = eventId ?? `evt-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    const existing = eventId
+      ? await this.prisma.webhookLog.findFirst({ where: { eventId, source: 'wompi' } })
+      : null;
     if (existing) return true;
 
     await this.prisma.webhookLog.create({
       data: {
         source: 'wompi',
-        eventId,
+        eventId: idForLog,
         payload: payload as object,
       },
     });
 
     const data = payload.data as Record<string, unknown>;
-    const reference = data?.reference as string;
-    const status = data?.status as string;
-    const transactionId = data?.transaction_id as string;
+    const transaction = data?.transaction as Record<string, unknown> | undefined;
+    const tx = transaction ?? data;
+    const reference = (tx?.reference ?? data?.reference) as string | undefined;
+    const status = (tx?.status ?? data?.status) as string | undefined;
+    const transactionId = (tx?.id ?? tx?.transaction_id ?? data?.transaction_id) as string | undefined;
 
     if (!reference) return false;
 

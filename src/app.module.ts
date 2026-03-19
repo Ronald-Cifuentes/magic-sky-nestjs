@@ -15,6 +15,9 @@ import { CustomersModule } from './customers/customers.module';
 import { CatalogModule } from './catalog/catalog.module';
 import { CartModule } from './cart/cart.module';
 import { OrdersModule } from './orders/orders.module';
+import { DraftOrdersModule } from './draft-orders/draft-orders.module';
+import { InventoryModule } from './inventory/inventory.module';
+import { PurchaseOrdersModule } from './purchase-orders/purchase-orders.module';
 import { PaymentsModule } from './payments/payments.module';
 import { CmsModule } from './cms/cms.module';
 import { ContactModule } from './contact/contact.module';
@@ -22,6 +25,7 @@ import { SettingsModule } from './settings/settings.module';
 import { CountriesModule } from './countries/countries.module';
 import { CurrenciesModule } from './currencies/currencies.module';
 import { LocalesModule } from './locales/locales.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -65,6 +69,9 @@ import { LocalesModule } from './locales/locales.module';
     CatalogModule,
     CartModule,
     OrdersModule,
+    DraftOrdersModule,
+    InventoryModule,
+    PurchaseOrdersModule,
     PaymentsModule,
     CmsModule,
     ContactModule,
@@ -72,6 +79,7 @@ import { LocalesModule } from './locales/locales.module';
     CountriesModule,
     CurrenciesModule,
     LocalesModule,
+    AnalyticsModule,
   ],
 })
 export class AppModule {}

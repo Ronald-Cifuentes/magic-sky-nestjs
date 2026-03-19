@@ -138,6 +138,39 @@ export class AuthService {
     }
   }
 
+  async updateCustomerEmail(userId: string, newEmail: string, currentPassword: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId, userType: 'CUSTOMER', isActive: true },
+    });
+    if (!user || !(await bcrypt.compare(currentPassword, user.passwordHash))) {
+      throw new UnauthorizedException('Contraseña incorrecta');
+    }
+    const existing = await this.prisma.user.findUnique({ where: { email: newEmail } });
+    if (existing && existing.id !== userId) {
+      throw new UnauthorizedException('El correo ya está en uso');
+    }
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { email: newEmail },
+    });
+    return true;
+  }
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId, userType: 'CUSTOMER', isActive: true },
+    });
+    if (!user || !(await bcrypt.compare(currentPassword, user.passwordHash))) {
+      throw new UnauthorizedException('Contraseña actual incorrecta');
+    }
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash },
+    });
+    return true;
+  }
+
   async logout(refreshToken?: string) {
     if (refreshToken) {
       try {

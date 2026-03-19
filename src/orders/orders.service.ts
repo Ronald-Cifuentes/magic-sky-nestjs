@@ -1,6 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { OrderStatus } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+
+export interface AdminOrdersResult {
+  items: any[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
 
 @Injectable()
 export class OrdersService {
@@ -60,6 +68,13 @@ export class OrdersService {
     return order;
   }
 
+  async findById(id: string) {
+    return this.prisma.order.findUnique({
+      where: { id },
+      include: { items: true, payments: true },
+    });
+  }
+
   async findByCustomer(customerId: string) {
     return this.prisma.order.findMany({
       where: { customerId },
@@ -72,7 +87,104 @@ export class OrdersService {
     return this.prisma.order.findMany({
       take: limit,
       orderBy: { createdAt: 'desc' },
-      include: { items: { include: { variant: { include: { product: true } } } } },
+      include: { items: { include: { variant: { include: { product: true } } } }, customer: true, payments: true, shipments: true },
+    });
+  }
+
+  async findAllPaginated(args: {
+    page?: number;
+    pageSize?: number;
+    search?: string;
+    status?: OrderStatus;
+    paymentStatus?: string;
+    fulfillmentStatus?: string;
+  }): Promise<AdminOrdersResult> {
+    const page = args.page ?? 1;
+    const pageSize = Math.min(args.pageSize ?? 50, 100);
+    const skip = (page - 1) * pageSize;
+
+    const where: Prisma.OrderWhereInput = {};
+
+    if (args.search?.trim()) {
+      const q = args.search.trim();
+      where.OR = [
+        { orderNumber: { contains: q, mode: 'insensitive' } },
+        { email: { contains: q, mode: 'insensitive' } },
+        { customer: { firstName: { contains: q, mode: 'insensitive' } } },
+        { customer: { lastName: { contains: q, mode: 'insensitive' } } },
+      ];
+    }
+
+    if (args.status) where.status = args.status;
+
+    if (args.paymentStatus) {
+      if (args.paymentStatus === 'paid' || args.paymentStatus === 'APPROVED') {
+        where.payments = { some: { status: 'APPROVED' } };
+      } else if (args.paymentStatus === 'unpaid' || args.paymentStatus === 'PENDING') {
+        where.AND = [
+          ...((where.AND as Prisma.OrderWhereInput[]) || []),
+          {
+            OR: [
+              { payments: { none: {} } },
+              { payments: { every: { status: { in: ['PENDING', 'DECLINED', 'ERROR'] } } } },
+            ],
+          },
+        ];
+      } else if (args.paymentStatus === 'cancelled') {
+        where.status = OrderStatus.CANCELLED;
+      }
+    }
+
+    if (args.fulfillmentStatus) {
+      if (args.fulfillmentStatus === 'unfulfilled' || args.fulfillmentStatus === 'no_preparado') {
+        where.AND = [
+          ...((where.AND as Prisma.OrderWhereInput[]) || []),
+          {
+            OR: [
+              { shipments: { none: {} } },
+              { shipments: { every: { status: 'pending' } } },
+            ],
+          },
+        ];
+      } else if (args.fulfillmentStatus === 'fulfilled' || args.fulfillmentStatus === 'preparado') {
+        where.AND = [
+          ...((where.AND as Prisma.OrderWhereInput[]) || []),
+          { shipments: { some: { status: { not: 'pending' } } } },
+        ];
+      }
+    }
+
+    const [items, total] = await Promise.all([
+      this.prisma.order.findMany({
+        where,
+        skip,
+        take: pageSize,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          items: { include: { variant: { include: { product: true } } } },
+          customer: true,
+          payments: true,
+          shipments: true,
+        },
+      }),
+      this.prisma.order.count({ where }),
+    ]);
+
+    return { items, total, page, pageSize };
+  }
+
+  async updateStatus(id: string, status: OrderStatus) {
+    const order = await this.prisma.order.findUnique({ where: { id } });
+    if (!order) throw new Error('Pedido no encontrado');
+    return this.prisma.order.update({
+      where: { id },
+      data: { status },
+      include: {
+        items: { include: { variant: { include: { product: true } } } },
+        customer: true,
+        payments: true,
+        shipments: true,
+      },
     });
   }
 
@@ -83,5 +195,30 @@ export class OrdersService {
       where,
       include: { items: { include: { variant: { include: { product: true } } } } },
     });
+  }
+
+  async cancelOrderByCustomer(orderId: string, customerId: string) {
+    const profile = await this.prisma.customerProfile.findUnique({
+      where: { userId: customerId },
+    });
+    if (!profile) throw new Error('Perfil no encontrado');
+
+    const order = await this.prisma.order.findFirst({
+      where: { id: orderId, customerId: profile.id },
+    });
+    if (!order) throw new Error('Pedido no encontrado');
+    if (order.status === OrderStatus.CANCELLED) throw new Error('El pedido ya está cancelado');
+    if (order.status !== OrderStatus.PENDING) {
+      throw new Error('Solo se pueden cancelar pedidos pendientes');
+    }
+
+    return this.updateStatus(orderId, OrderStatus.CANCELLED);
+  }
+
+  async adminDeleteOrder(orderId: string) {
+    const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+    if (!order) throw new Error('Pedido no encontrado');
+    await this.prisma.order.delete({ where: { id: orderId } });
+    return order;
   }
 }

@@ -227,6 +227,16 @@ async function main() {
   if (inicioPage) {
     const layout = (inicioPage.layoutJson as { pageVersion?: number; root?: Array<Record<string, unknown>> }) || { pageVersion: 1, root: [] };
     const root = Array.isArray(layout.root) ? [...layout.root] : [];
+    const hasAnnouncementBar = root.some((n: Record<string, unknown>) => n.type === 'AnnouncementBar');
+    if (!hasAnnouncementBar) {
+      root.unshift({
+        id: `announcement_${Date.now()}`,
+        type: 'AnnouncementBar',
+        props: { messages: [{ text: 'EL NÚMERO DE GUÍA SE ENVÍA POR WHATSAPP O CORREO.', linkUrl: '' }] },
+        zone: 'header',
+        children: [],
+      });
+    }
     const heroIdx = root.findIndex((n: Record<string, unknown>) => n.type === 'HeroSection');
     if (heroIdx >= 0 && heroBanners.length > 0) {
       const heroNode = root[heroIdx] as Record<string, unknown>;

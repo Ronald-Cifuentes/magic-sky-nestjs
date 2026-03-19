@@ -7,8 +7,10 @@ import { CategoriesResolver } from './categories/categories.resolver';
 import { CategoriesService } from './categories/categories.service';
 import { BrandsResolver } from './brands/brands.resolver';
 import { BrandsService } from './brands/brands.service';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
+  imports: [AuthModule],
   providers: [
     ProductsResolver,
     ProductsService,
